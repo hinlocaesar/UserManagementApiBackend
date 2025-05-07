@@ -5,6 +5,7 @@ GET {{baseUrl}}/
 Accept: application/json
 
 ### Test 2: Create a new user
+# @name createJohn
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
@@ -13,7 +14,11 @@ Content-Type: application/json
     "email": "john.doe@example.com"
 }
 
+### Store John's ID from the response for later use
+@johnId = {{createJohn.response.body.id}}
+
 ### Test 3: Create another user
+# @name createJane
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
@@ -22,18 +27,19 @@ Content-Type: application/json
     "email": "jane.smith@example.com"
 }
 
+### Store Jane's ID from the response for later use
+@janeId = {{createJane.response.body.id}}
+
 ### Test 4: Get all users
 GET {{baseUrl}}/api/users
 Accept: application/json
 
 ### Test 5: Get a specific user
-# Replace the ID below with an actual ID returned from the create user response
-GET {{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000
+GET {{baseUrl}}/api/users/{{johnId}}
 Accept: application/json
 
 ### Test 6: Update a user
-# Replace the ID below with an actual ID returned from the create user response
-PUT {{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000
+PUT {{baseUrl}}/api/users/{{johnId}}
 Content-Type: application/json
 
 {
@@ -42,17 +48,14 @@ Content-Type: application/json
 }
 
 ### Test 7: Get the updated user to verify changes
-# Use the same ID as in the PUT request
-GET {{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000
+GET {{baseUrl}}/api/users/{{johnId}}
 Accept: application/json
 
 ### Test 8: Delete a user
-# Replace the ID below with an actual ID returned from the create user response
-DELETE {{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000
+DELETE {{baseUrl}}/api/users/{{johnId}}
 
 ### Test 9: Try to get the deleted user (should return 404 Not Found)
-# Use the same ID as in the DELETE request
-GET {{baseUrl}}/api/users/00000000-0000-0000-0000-000000000000
+GET {{baseUrl}}/api/users/{{johnId}}
 Accept: application/json
 
 ### Test 10: Try to update a non-existent user (should return 404 Not Found)
@@ -66,3 +69,46 @@ Content-Type: application/json
 
 ### Test 11: Try to delete a non-existent user (should return 404 Not Found)
 DELETE {{baseUrl}}/api/users/11111111-1111-1111-1111-111111111111
+
+### Test 12: Validation test - Create user with invalid data (empty name)
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+    "name": "",
+    "email": "invalid@example.com"
+}
+
+### Test 13: Validation test - Create user with invalid email
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+    "name": "Invalid User",
+    "email": "not-an-email"
+}
+
+### Test 14: Validation test - Update user with invalid data
+PUT {{baseUrl}}/api/users/{{janeId}}
+Content-Type: application/json
+
+{
+    "name": "",
+    "email": "invalid@example.com"
+}
+
+### Test 15: Validation test - Create user with missing name field
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+    "email": "missing.name@example.com"
+}
+
+### Test 16: Validation test - Create user with missing email field
+POST {{baseUrl}}/api/users
+Content-Type: application/json
+
+{
+    "name": "Missing Email User"
+}

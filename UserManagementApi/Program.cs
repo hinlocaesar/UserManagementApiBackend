@@ -1,11 +1,19 @@
+using FluentValidation;
+using UserManagementApi.Models;
+using UserManagementApi.Validators;
+// using Microsoft.Extensions.Logging;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Create an in-memory collection to store users
-var users = new List<User>();
+// Add FluentValidation
+builder.Services.AddScoped<IValidator<User>, UserValidator>();
+
+// Create an in-memory dictionary to store users for O(1) lookups
+var users = new Dictionary<Guid, User>();
 
 var app = builder.Build();
 
@@ -19,53 +27,105 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => "Hello World!");
 
 // GET: Retrieve all users
-app.MapGet("/api/users", () => users);
+app.MapGet("/api/users", (ILogger<Program> logger) => 
+{
+    try
+    {
+        return Results.Ok(users.Values);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred while retrieving all users");
+        return Results.Problem("An error occurred while processing your request.", statusCode: 500);
+    }
+});
 
 // GET: Retrieve a specific user by ID
-app.MapGet("/api/users/{id}", (Guid id) => 
+app.MapGet("/api/users/{id}", (Guid id, ILogger<Program> logger) => 
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
-    return user is null ? Results.NotFound() : Results.Ok(user);
+    try
+    {
+        if (users.TryGetValue(id, out var user))
+        {
+            return Results.Ok(user);
+        }
+        return Results.NotFound();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred while retrieving user with ID {UserId}", id);
+        return Results.Problem("An error occurred while processing your request.", statusCode: 500);
+    }
 });
 
 // POST: Add a new user
-app.MapPost("/api/users", (User user) =>
+app.MapPost("/api/users", (User user, IValidator<User> validator, ILogger<Program> logger) =>
 {
-    user.Id = Guid.NewGuid();
-    users.Add(user);
-    return Results.Created($"/api/users/{user.Id}", user);
+    try
+    {
+        // Validate the user
+        var validationResult = validator.Validate(user);
+        if (!validationResult.IsValid)
+        {
+            return Results.BadRequest(validationResult.Errors.Select(e => new { Property = e.PropertyName, Error = e.ErrorMessage }));
+        }
+        
+        user.Id = Guid.NewGuid();
+        users[user.Id] = user;
+        return Results.Created($"/api/users/{user.Id}", user);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred while creating a new user");
+        return Results.Problem("An error occurred while processing your request.", statusCode: 500);
+    }
 });
 
 // PUT: Update an existing user's details
-app.MapPut("/api/users/{id}", (Guid id, User updatedUser) =>
+app.MapPut("/api/users/{id}", (Guid id, User updatedUser, IValidator<User> validator, ILogger<Program> logger) =>
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
-    if (user is null) return Results.NotFound();
-    
-    user.Name = updatedUser.Name;
-    user.Email = updatedUser.Email;
-    // Update other properties as needed
-    
-    return Results.NoContent();
+    try
+    {
+        if (!users.TryGetValue(id, out var user))
+            return Results.NotFound();
+        
+        // Validate the updated user
+        var validationResult = validator.Validate(updatedUser);
+        if (!validationResult.IsValid)
+        {
+            return Results.BadRequest(validationResult.Errors.Select(e => new { Property = e.PropertyName, Error = e.ErrorMessage }));
+        }
+        
+        user.Name = updatedUser.Name;
+        user.Email = updatedUser.Email;
+        // Update other properties as needed
+        users[id] = user; // Ensure the updated user is saved back to the dictionary
+        
+        return Results.NoContent();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred while updating user with ID {UserId}", id);
+        return Results.Problem("An error occurred while processing your request.", statusCode: 500);
+    }
 });
 
 // DELETE: Remove a user by ID
-app.MapDelete("/api/users/{id}", (Guid id) =>
+app.MapDelete("/api/users/{id}", (Guid id, ILogger<Program> logger) =>
 {
-    var user = users.FirstOrDefault(u => u.Id == id);
-    if (user is null) return Results.NotFound();
-    
-    users.Remove(user);
-    return Results.NoContent();
+    try
+    {
+        if (!users.ContainsKey(id))
+            return Results.NotFound();
+        
+        users.Remove(id);
+        return Results.NoContent();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occurred while deleting user with ID {UserId}", id);
+        return Results.Problem("An error occurred while processing your request.", statusCode: 500);
+    }
 });
 
 app.Run();
-
-// User model class
-class User
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    // Add additional properties as needed
-}
