@@ -33,3 +33,4 @@ C:\Users\caesar.hinlo\Documents\selfStudy\UserManagementApiBackend\UserManagemen
 C:\Users\caesar.hinlo\Documents\selfStudy\UserManagementApiBackend\UserManagementApiBackend\UserManagementApi\obj\Debug\net9.0\UserManagementApi.csproj.AssemblyReference.cache
 C:\Users\caesar.hinlo\Documents\selfStudy\UserManagementApiBackend\UserManagementApiBackend\UserManagementApi\obj\Debug\net9.0\UserManagementApi.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\caesar.hinlo\Documents\selfStudy\UserManagementApiBackend\UserManagementApiBackend\UserManagementApi\obj\Debug\net9.0\UserMana.5F5CA308.Up2Date
+C:\Users\caesar.hinlo\Documents\selfStudy\UserManagementApiBackend\UserManagementApiBackend\UserManagementApi\obj\Debug\net9.0\UserManagementApi.sourcelink.json
