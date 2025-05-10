@@ -26,6 +26,9 @@ app.UseHttpLogging();
 // Register the error handling middleware (should be at the beginning of the pipeline)
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
+// Register the authentication middleware
+app.UseMiddleware<AuthenticationMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -112,3 +112,21 @@ Content-Type: application/json
 {
     "name": "Missing Email User"
 }
+
+### Test 17: Authentication - Access protected endpoint without token (should return 401 Unauthorized)
+GET {{baseUrl}}/api/users
+Accept: application/json
+
+### Test 18: Authentication - Access protected endpoint with invalid token (should return 401 Unauthorized)
+GET {{baseUrl}}/api/users
+Accept: application/json
+Authorization: Bearer invalid
+
+### Test 19: Authentication - Access protected endpoint with valid token
+GET {{baseUrl}}/api/users
+Accept: application/json
+Authorization: Bearer valid-token
+
+### Test 20: Authentication - Access public endpoint without token (should work)
+GET {{baseUrl}}/
+Accept: application/json
