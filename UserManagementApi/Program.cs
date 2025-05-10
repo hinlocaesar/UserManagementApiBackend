@@ -1,4 +1,5 @@
 using FluentValidation;
+using UserManagementApi.Middleware;
 using UserManagementApi.Models;
 using UserManagementApi.Validators;
 // using Microsoft.Extensions.Logging;
@@ -19,9 +20,12 @@ var users = new Dictionary<Guid, User>();
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
 app.UseHttpLogging();
 
-// Configure the HTTP request pipeline
+// Register the error handling middleware (should be at the beginning of the pipeline)
+app.UseMiddleware<ErrorHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
