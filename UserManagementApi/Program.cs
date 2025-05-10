@@ -5,6 +5,8 @@ using UserManagementApi.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpLogging(o => { });
+
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -16,6 +18,8 @@ builder.Services.AddScoped<IValidator<User>, UserValidator>();
 var users = new Dictionary<Guid, User>();
 
 var app = builder.Build();
+
+app.UseHttpLogging();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
